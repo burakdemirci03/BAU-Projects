@@ -35,7 +35,7 @@ for i in range(len(ddf.columns)):
   pl.xlabel("Values")
   pl.ylabel("Count")
   pl.show()
-  #Plotting ddf as a histogram graph with 25 bins
+  #Plotting ddf as a histogram graph with 15 bins
 
 ddf2 = ddf.copy()
 #Making a copy of ddf
@@ -62,4 +62,4 @@ for i in range(len(ddf2.columns)):
   pl.xlabel("Values")
   pl.ylabel("Count")
   pl.show()
-  #Plotting ddf2 as a histogram graph with 25 bins
+  #Plotting ddf2 as a histogram graph with 15 bins
