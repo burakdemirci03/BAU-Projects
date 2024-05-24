@@ -444,7 +444,10 @@ cat(shaw_p_val(p2_shaw$p), "in 2nd Person's Neighbourhood Prices")
 
 # Using Fligner-Killeen Test to compare two sample variances
 # which are not normally distributed.
-lev <- leveneTest(p1_nbhd_df$price, p2_nbhd_df$price, center = "median", robust=TRUE, alternative="less")
+combined_price <- rbind(data.frame(price = p1_nbhd_df$price, group = "p1"),
+                     data.frame(price = p2_nbhd_df$price, group = "p2"))
+
+lev <- leveneTest(price ~ group, data=combined_price, center=median)
 lev_var_diff <- lev$`Pr(>F)`[1]
 
 cat("Fligner-Killeen p-Value:", lev_var_diff, "->", var_p_val(lev_var_diff))
@@ -463,7 +466,7 @@ fit_test <- function(p){
 }
 
 # Let's check the difference of observed frequencies of sampleListings
-# and expected probabilites of Listings.
+# and expected probabilities of Listings.
 freq5listings <- sampleListings %>%
               group_by(neighbourhood) %>%
               filter(n() > 5)
