@@ -51,9 +51,19 @@ sampleMap <- leaflet() %>% addTiles() %>%
 sampleMap
 
 # Regression line of coordinates shown in a more simple plot.
-plot(s_lng, s_lat)
+plot(s_lng, s_lat, xlab="Longitude", ylab="Latitude")
 abline(lm(s_lat ~ s_lng), col="#f01212")
 
+
+outlier_attr_rm <- function(data){
+  data <- data[!is.na(data)]
+  qnt <- quantile(data, probs=c(.25, .75))
+  iqr <- IQR(data)
+  lower <- qnt[1] - 1.5*iqr
+  upper <- qnt[2] + 1.5*iqr
+  cleaned_data <- data[data > lower & data < upper]
+  return(cleaned_data)
+}
 
 p_val <- function(p){
   case_when(
@@ -85,16 +95,6 @@ chisq_p_val <- function(p){
 
 "#fff"
 # Plotting Graphs
-
-outlier_rm <- function(data){
-  data <- data[!is.na(data)]
-  qnt <- quantile(data, probs=c(.25, .75))
-  iqr <- IQR(data)
-  lower <- qnt[1] - 1.5*iqr
-  upper <- qnt[2] + 1.5*iqr
-  cleaned_data <- data[data > lower & data < upper]
-  return(cleaned_data)
-}
 
 # Bar Plot of Population's Room Types:
 barplot(table(listings$room_type), col=c("#06d0d0","#d322a7","#4ba137","#d1d85e"))
@@ -174,7 +174,7 @@ hist(listings$price, breaks=500, col=brewer.pal(12, "Set3"),
      xlab="Price", main="")
 
 # Histogram of Price (without outliers):
-handled_prc <- outlier_rm(listings$price)
+handled_prc <- outlier_attr_rm(listings$price)
 hist(handled_prc, col=brewer.pal(12, "Set3"), xlab="Price", main="")
 rm(handled_prc)
 
@@ -183,7 +183,7 @@ hist(listings$calculated_host_listings_count, breaks=50, col=brewer.pal(12, "Set
      xlab="Airbnb Listings of a Host", main="")
 
 # Histogram of Calculated Host Listings Count (without outliers):
-handled_chlc <- outlier_rm(listings$calculated_host_listings_count)
+handled_chlc <- outlier_attr_rm(listings$calculated_host_listings_count)
 hist(handled_chlc, col=brewer.pal(12, "Set3"), xlab="Airbnb Listings of a Host", main="")
 rm(handled_chlc)
 
@@ -192,7 +192,7 @@ hist(listings$number_of_reviews, breaks=20, col=brewer.pal(12, "Set3"),
      xlab="Number of Reviews", main="")
 
 # Histogram of Number of Reviews (without outliers):
-handled_nmrv <- outlier_rm(listings$number_of_reviews)
+handled_nmrv <- outlier_attr_rm(listings$number_of_reviews)
 hist(handled_nmrv, col=brewer.pal(12, "Set3"), xlab="Number of Reviews", main="")
 rm(handled_nmrv)
 
@@ -211,22 +211,21 @@ norm_test <- function(p){
 
 # We have a graphical method for checking normality
 # Q-Q Plot Method:
-qqPlot(sampleListings$price)
+qqPlot(sampleListings$price, ylab="Price")
 
 # It looks like we have an outlier so let's just ignore the outlier.
-reasonableSample <- sampleListings[sampleListings$price <= 2500, ]
-reasonableSample <- reasonableSample %>% drop_na("price")
+reasonablePrice <- outlier_attr_rm(sampleListings$price)
 
-qqPlot(reasonableSample$price)
+qqPlot(reasonablePrice, ylab="Price")
 
-# Let's check the reasonableListings' price distribution in other
+# Let's check the reasonablePrices' distribution in other
 # statistical methods and compare p-Values with Shapiro-Wilk Test.
-prc_shaw <- shapiro.test(reasonableSample$price)
+prc_shaw <- shapiro.test(reasonablePrice)
 shaw_p <- prc_shaw$p.value
 cat(norm_test(shaw_p), "in Price for Shapiro-Wilk Test")
 
 # Method 1: Chi-Square Goodness-of-Fit Test:
-prc_gof <- chisq.test(reasonableSample$price)
+prc_gof <- chisq.test(reasonablePrice)
 gof_p <- prc_gof$p.value
 cat(norm_test(gof_p), "in Price for Chi-Square Goodness-of-Fit Test")
 
@@ -234,7 +233,7 @@ cat("Shapiro-Wilk Test, p-Value:", shaw_p, "\n",
     "Chi-Square Goodness-of-Fit Test, p-Value:", gof_p)
 
 # Method 2: Kolmogorov-Smirnov Test:
-prc_kolms <- ks.test(reasonableSample$price, 'pnorm')
+prc_kolms <- ks.test(reasonablePrice, 'pnorm')
 kolms_p <- prc_kolms$p.value
 cat(norm_test(kolms_p), "in Price for Kolmogorov-Smirnov Test")
 
@@ -343,11 +342,7 @@ rho_prc <- cor(sampleListings$number_of_reviews, sampleListings$price, method="s
 cat("Spearman Correlation Coefficient:", rho_prc, "->",
     spearman_corr_rel(rho_prc), "between Number of Reviews and Price")
 
-# 2nd Way: Comparing test value and critical (t) value but with Spearman's rho cor.test().
-cor.test(sampleListings$number_of_reviews, sampleListings$occupancy, method="spearman")
-cor.test(sampleListings$number_of_reviews, sampleListings$price, method="spearman")
-
-# 3rd Way: Checking the scatter graph to see any relation.
+# 2nd Way: Checking the scatter graph to see any relation.
 plot(sampleListings$number_of_reviews, sampleListings$occupancy, xlab="Number of Reviews", ylab="Occupancy")
 plot(sampleListings$number_of_reviews, sampleListings$price, xlab="Number of Reviews", ylab="Price")
 
@@ -358,22 +353,24 @@ plot(sampleListings$number_of_reviews, sampleListings$price, xlab="Number of Rev
 
 person1 <- sample_n(listings, 1)
 p1_nbhd <- person1$neighbourhood
-p1_nbhd_df <- head(listings[listings$neighbourhood == p1_nbhd, ], 10)
+p1_nbhd_df <- sample_n(listings[listings$neighbourhood == p1_nbhd, ], 10)
 p1_varprc <- var(p1_nbhd_df$price)
 
 nbhd_without1 <- listings[listings$neighbourhood != p1_nbhd, ]
 
 person2 <- sample_n(nbhd_without1, 1)
 p2_nbhd <- person2$neighbourhood
-p2_nbhd_df <- head(listings[listings$neighbourhood == p2_nbhd, ], 10)
+p2_nbhd_df <- sample_n(listings[listings$neighbourhood == p2_nbhd, ], 10)
 p2_varprc <- var(p2_nbhd_df$price)
 
 rm(nbhd_without1)
 
-normality_method <- function(p1, p2){
+ind_test <- function(p){
   case_when(
-    p1 <= 0.1 | p2 <= 0.1 ~ "spearman",
-    p1 > 0.1 & p2 > 0.1 ~ "pearson",
+    p <= 0.01 ~ "Difference is Highly Significant; Variables are Dependent of Each Other",
+    p > 0.01 & p <= 0.05 ~ "Difference is Significant; Variables are Dependent of Each Other",
+    p > 0.05 & p <= 0.1 ~ "Difference is Weakly Significant; Variables are Dependent of Each Other",
+    p > 0.1 ~ "Difference is not Significant; Variables are Independent of Each Other",
   )
 }
 
@@ -393,22 +390,15 @@ t_mean_diff <- t$p.value
 
 cat("p-Value:", t_mean_diff, "->", mean_p_val(t_mean_diff), "(with assuming independence and normality)")
 
-# Check the normality and independence(correlation) for more accurate results.
+# Check the normality and independence for more accurate results.
 p1_shaw <- shapiro.test(p1_nbhd_df$price)
 cat(shaw_p_val(p1_shaw$p), "in 1st Person's Neighbourhood Prices")
 p2_shaw <- shapiro.test(p2_nbhd_df$price)
 cat(shaw_p_val(p2_shaw$p), "in 2nd Person's Neighbourhood Prices")
 
-prc_diff_rel <- cor(p1_nbhd_df$price, p2_nbhd_df$price,
-                    method=normality_method(p1_shaw$p, p2_shaw$p))
-
-if (normality_method(p1_shaw$p, p2_shaw$p) == "spearman"){
-  cat("Spearman Correlation Coefficient:", prc_diff_rel, "->",
-      spearman_corr_rel(prc_diff_rel), "in 1st and 2nd Person's Neighbourhood Prices")
-} else {
-  cat("Pearson Correlation Coefficient:", prc_diff_rel, "->",
-      pearson_corr_rel(prc_diff_rel), "in 1st and 2nd Person's Neighbourhood Prices")
-}
+ind <- fisher.test(p1_nbhd_df$price, p2_nbhd_df$price)
+ind_p <- ind$p.value
+cat("p-value:", ind_p, "->", ind_test(ind_p))
 
 # Using Mann-Whitney U Test to compare two sample means
 # which are not normally distributed and independent.
@@ -447,10 +437,10 @@ cat(shaw_p_val(p2_shaw$p), "in 2nd Person's Neighbourhood Prices")
 combined_price <- rbind(data.frame(price = p1_nbhd_df$price, group = "p1"),
                      data.frame(price = p2_nbhd_df$price, group = "p2"))
 
-lev <- leveneTest(price ~ group, data=combined_price, center=median)
-lev_var_diff <- lev$`Pr(>F)`[1]
+flgk <- fligner.test(combined_price$price, combined_price$group, alternative="less")
+flgk_var_diff <- flgk$p.value
 
-cat("Fligner-Killeen p-Value:", lev_var_diff, "->", var_p_val(lev_var_diff))
+cat("Fligner-Killeen Test p-Value:", flgk_var_diff, "->", var_p_val(flgk_var_diff))
 
 
 "#fff"
@@ -466,7 +456,7 @@ fit_test <- function(p){
 }
 
 # Let's check the difference of observed frequencies of sampleListings
-# and expected probabilities of Listings.
+# and expected probabilites of Listings.
 freq5listings <- sampleListings %>%
               group_by(neighbourhood) %>%
               filter(n() > 5)
@@ -591,10 +581,6 @@ cat("Kruskal-Wallis p-value:", kw_h, "->", kw_h_val(kw_h))
 ggplot(reasonableListings, aes(x=reorder(neighbourhood, price), y=price)) +
   geom_boxplot() +
   theme(axis.text.x=element_text(angle=90, vjust=0.5, hjust=1))
-
-
-
-
 
 
 
