@@ -497,7 +497,8 @@ cat("χ² Value",chi2_p, "->", fit_test(chi2_p), "in Neigbourhoods")
 
 # Let's find the correlation between Number of Reviews and Price.
 
-plot(sampleListings$number_of_reviews, sampleListings$price, col="#2525de")
+plot(sampleListings$number_of_reviews, sampleListings$price, col="#2525de",
+     xlab="Number of Reviews", ylab="Price")
 
 rew_prc_corr <- cor(sampleListings$number_of_reviews, sampleListings$price, method="spearman")
 cat("Spearman Correlation Coefficient:", rew_prc_corr, "->",
@@ -506,7 +507,8 @@ cat("Spearman Correlation Coefficient:", rew_prc_corr, "->",
 abline(lm(sampleListings$price ~ sampleListings$number_of_reviews), col="#f01212")
 
 # Or we can easily draw with scatterplot().
-scatterplot(sampleListings$number_of_reviews, sampleListings$price)
+scatterplot(sampleListings$number_of_reviews, sampleListings$price,
+            xlab="Number of Reviews", ylab="Price")
 
 
 "#fff"
@@ -574,6 +576,8 @@ kw_h_val <- function(h){
   )
 }
 
+reasonableSample <- sampleListings[sampleListings$price <= 2500, ]
+
 kw_test <- kruskal.test(price ~ neighbourhood, data=reasonableSample)
 kw_h <- kw_test$p.value
 cat("Kruskal-Wallis p-value:", kw_h, "->", kw_h_val(kw_h))
@@ -581,8 +585,6 @@ cat("Kruskal-Wallis p-value:", kw_h, "->", kw_h_val(kw_h))
 ggplot(reasonableListings, aes(x=reorder(neighbourhood, price), y=price)) +
   geom_boxplot() +
   theme(axis.text.x=element_text(angle=90, vjust=0.5, hjust=1))
-
-
 
 
 
