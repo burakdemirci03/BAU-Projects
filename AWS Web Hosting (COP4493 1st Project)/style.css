@@ -1,0 +1,29 @@
+body {
+  background-color: rgb(45, 54, 68);
+  font-family: Copperplate;
+}
+
+div.mainDiv {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+}
+
+p.text {
+  font-size: 48px;
+  color: rgb(225, 225, 225);
+  text-align: center;
+  margin: 192px 64px 24px 64px;
+  padding: 24px 108px;
+  border: 6px double rgb(235, 159, 69);
+  border-radius: 96px;
+}
+
+p.creator {
+  font-size: 16px;
+  color: rgb(235, 159, 69);
+  text-align: center;
+  margin-bottom: 48px;
+}

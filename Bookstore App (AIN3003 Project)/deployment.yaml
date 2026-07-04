@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstoreapp
+  labels:
+    app: bookstoreapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bookstoreapp
+  template:
+    metadata:
+      labels:
+        app: bookstoreapp
+    spec:
+      containers:
+      - name: bookstoreapp
+        image: bookstore3003.azurecr.io/bookstoreapp:v1
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstoreapp-service
+spec:
+  selector:
+    app: bookstoreapp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: LoadBalancer

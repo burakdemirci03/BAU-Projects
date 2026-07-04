@@ -1,0 +1,31 @@
+# Environment Variables
+.env
+
+# Python Virtual Environments
+venv/
+.venv/
+**/venv/
+**/.venv/
+
+# Python Caches
+__pycache__/
+**/__pycache__/
+
+# RStudio Files
+.RData
+.Rhistory
+.Rproj.user/
+**/.Rproj.user/
+
+# Data Folders
+data/
+db_data/
+
+# VS Code Folders
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# MacOS Files
+.DS_Store

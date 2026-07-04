@@ -1,0 +1,23 @@
+name: S3 Automatic Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Check
+        uses: actions/checkout@v3
+
+      - name: Credential Check
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: S3 Deployment
+        run: |
+          aws s3 sync . s3://s3-website-hosting-burakdmrc --delete

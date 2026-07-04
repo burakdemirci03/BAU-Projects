@@ -1,0 +1,26 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: crfms_mongodb
+    ports:
+      - "27072:27017"
+    volumes:
+      - ./data/db:/data/db
+    networks:
+      - crfms_network
+
+  app:
+    build: .
+    container_name: crfms_backend
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://db:27017
+    networks:
+      - crfms_network
+
+networks:
+  crfms_network:
+    driver: bridge
